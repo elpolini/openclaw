@@ -42,6 +42,15 @@ import {
   updateExecApprovalsFormValue,
 } from "./controllers/exec-approvals.ts";
 import { loadLogs } from "./controllers/logs.ts";
+import {
+  createMission,
+  deleteMission,
+  loadMissions,
+  patchMissionForm,
+  selectMission,
+  toggleMissionsForm,
+  updateMissionStatus,
+} from "./controllers/missions.ts";
 import { loadNodes } from "./controllers/nodes.ts";
 import { loadPresence } from "./controllers/presence.ts";
 import { deleteSessionAndRefresh, loadSessions, patchSession } from "./controllers/sessions.ts";
@@ -64,6 +73,7 @@ import { renderExecApprovalPrompt } from "./views/exec-approval.ts";
 import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.ts";
 import { renderInstances } from "./views/instances.ts";
 import { renderLogs } from "./views/logs.ts";
+import { renderMissions } from "./views/missions.ts";
 import { renderNodes } from "./views/nodes.ts";
 import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
@@ -346,6 +356,27 @@ export function renderApp(state: AppViewState) {
                 onRun: (job) => runCronJob(state, job),
                 onRemove: (job) => removeCronJob(state, job),
                 onLoadRuns: (jobId) => loadCronRuns(state, jobId),
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "missions"
+            ? renderMissions({
+                loading: state.missionsLoading,
+                missions: state.missions,
+                error: state.missionsError,
+                form: state.missionsForm,
+                showForm: state.missionsShowForm,
+                selectedMissionId: state.missionsSelectedId,
+                availableAgents: state.agentsList?.agents?.map((a) => a.id) ?? [],
+                onRefresh: () => loadMissions(state),
+                onFormChange: (patch) => patchMissionForm(state, patch),
+                onToggleForm: () => toggleMissionsForm(state),
+                onCreateMission: () => createMission(state),
+                onSelectMission: (id) => selectMission(state, id),
+                onUpdateStatus: (id, status) => updateMissionStatus(state, id, status),
+                onDeleteMission: (id) => deleteMission(state, id),
               })
             : nothing
         }
