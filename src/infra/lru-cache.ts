@@ -75,6 +75,7 @@ export function createLruCache<V>(options: LruCacheOptions): LruCache<V> {
       }
     },
 
+    /** Check existence without updating LRU order (read-only probe). */
     has(key) {
       const entry = map.get(key);
       if (!entry) {

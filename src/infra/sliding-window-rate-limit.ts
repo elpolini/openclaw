@@ -21,12 +21,23 @@ export function createSlidingWindowRateLimiter(params: {
   const windowMs = Math.max(1, Math.floor(params.windowMs));
   const now = params.now ?? Date.now;
 
-  const timestamps: number[] = [];
+  // Ring buffer avoids O(n) shift(); head advances as entries expire.
+  let buf: number[] = [];
+  let head = 0;
+
+  function activeCount() {
+    return buf.length - head;
+  }
 
   function prune(nowMs: number) {
     const cutoff = nowMs - windowMs;
-    while (timestamps.length > 0 && timestamps[0] < cutoff) {
-      timestamps.shift();
+    while (head < buf.length && buf[head] < cutoff) {
+      head += 1;
+    }
+    // Compact when more than half the buffer is dead space
+    if (head > 0 && head > buf.length / 2) {
+      buf = buf.slice(head);
+      head = 0;
     }
   }
 
@@ -35,8 +46,8 @@ export function createSlidingWindowRateLimiter(params: {
       const nowMs = now();
       prune(nowMs);
 
-      if (timestamps.length >= maxRequests) {
-        const oldest = timestamps[0];
+      if (activeCount() >= maxRequests) {
+        const oldest = buf[head];
         const retryAfterMs = Math.max(0, oldest + windowMs - nowMs);
         return {
           allowed: false,
@@ -45,21 +56,22 @@ export function createSlidingWindowRateLimiter(params: {
         };
       }
 
-      timestamps.push(nowMs);
+      buf.push(nowMs);
       return {
         allowed: true,
         retryAfterMs: 0,
-        remaining: Math.max(0, maxRequests - timestamps.length),
+        remaining: Math.max(0, maxRequests - activeCount()),
       };
     },
 
     reset() {
-      timestamps.length = 0;
+      buf = [];
+      head = 0;
     },
 
     count() {
       prune(now());
-      return timestamps.length;
+      return activeCount();
     },
   };
 }
