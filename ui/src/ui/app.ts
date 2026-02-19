@@ -55,6 +55,7 @@ import { loadAssistantIdentity as loadAssistantIdentityInternal } from "./contro
 import type { DevicePairingList } from "./controllers/devices.ts";
 import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals.ts";
+import { DEFAULT_MISSIONS_FORM, type MissionsFormState } from "./controllers/missions.ts";
 import type { SkillMessage } from "./controllers/skills.ts";
 import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway.ts";
 import type { Tab } from "./navigation.ts";
@@ -299,6 +300,13 @@ export class OpenClawApp extends LitElement {
   @state() cronRunsJobId: string | null = null;
   @state() cronRuns: CronRunLogEntry[] = [];
   @state() cronBusy = false;
+
+  @state() missionsLoading = false;
+  @state() missions: import("./views/missions.js").Mission[] = [];
+  @state() missionsError: string | null = null;
+  @state() missionsForm: MissionsFormState = { ...DEFAULT_MISSIONS_FORM };
+  @state() missionsShowForm = false;
+  @state() missionsSelectedId: string | null = null;
 
   @state() updateAvailable: import("./types.js").UpdateAvailable | null = null;
 
